@@ -1,5 +1,5 @@
+from . import models, schemas, utils
 from typing import List
-from . import models, schemas
 from .models import Posts, Users
 from .database import Base, engine, get_db
 from fastapi import FastAPI, Depends, HTTPException, Response, status
@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from psycopg.rows import dict_row
 import time
 import psycopg
-
 
 ### This is causing error as models is getting overwritten for some reason
 # models = Base.metadata.create_all(bind=engine)
@@ -80,6 +79,9 @@ def get_user(db: Session = Depends(get_db)):
 
 @app.post("/users",status_code=status.HTTP_201_CREATED,response_model=schemas.UserResponse)
 def create_user(users:schemas.UserCreate,db:Session = Depends(get_db)):
+    hashed_password = utils.hash(users.password)
+    users.password = hashed_password
+
     new_user = models.Users(**users.dict())
     db.add(new_user)
     db.commit()
