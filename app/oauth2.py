@@ -1,0 +1,37 @@
+from fastapi import Depends, HTTPException, status
+from jose import jwt, JWTError
+from datetime import datetime, timedelta
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+from . import schemas
+
+SECRET_KEY = "c64e0a3462faf9a89c9967394a1b277371506976f4b187a2489a657ab1f0bd0e"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRES_IN = 30
+
+def create_token(data: dict):
+    to_encode= data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN)
+    to_encode.update({'exp':expire})
+    encoded_jwt = jwt.encode(to_encode,SECRET_KEY,algorithm = ALGORITHM)
+    return encoded_jwt
+
+def verify_access_token(token: str, credentials_exception):
+    try:
+        payload = jwt.decode(token, SECRET_KEY,algorithms = [ALGORITHM])
+        user_id: str = payload.get("user_id")
+        if user_id is None:
+            raise credentials_exception
+        token_data = schemas.TokenDate(id=user_id)
+    except JWTError:
+        raise credentials_exception
+    
+    return token_data
+    
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                          detail= f"Could not validate credentials.",
+                                          headers= {"WWW-Authenticate":"Bearer"})
+    return verify_access_token(token, credentials_exception)
