@@ -16,6 +16,7 @@ def root(db: Session = Depends(get_db)):
 
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=schemas.PostResponse)
 def create_post(post: schemas.PostCreate,db: Session = Depends(get_db),user_current: int = Depends(oauth2.get_current_user)):
+    
     # new_posts=models.Posts(title=post.title, content=post.content, published=post.published)
     new_posts=models.Posts(owner_id = user_current.id,**post.dict())
     db.add(new_posts)
@@ -42,6 +43,10 @@ def update_post(id: int, post: schemas.PostCreate, db:Session = Depends(get_db),
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail = f'post with id: {id} was not found.')
     
+    if existing_post.owner_id != user_current.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail = f'User id: {id} is not authorized to perform this action.')
+    
     post_query.update(post.dict(),synchronize_session = False)
     db.commit()
 
@@ -51,12 +56,18 @@ def update_post(id: int, post: schemas.PostCreate, db:Session = Depends(get_db),
 
 @router.delete("/{id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id:int, db:Session = Depends(get_db),user_current: int = Depends(oauth2.get_current_user)):
-    del_post = db.query(models.Posts).filter(models.Posts.id == id)
-    if del_post.first() is None:
+    post_query = db.query(models.Posts).filter(models.Posts.id == id)
+    del_post = post_query.first()
+
+    if del_post is None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,
                             detail = f'post with id: {id} was not found.')
+
+    if del_post.owner_id != user_current.id:
+        raise HTTPException(status_code = status.HTTP_403_FORBIDDEN,
+                            detail = f'User id: {id} is not authorized to perform this action on the post.')
     
-    del_post.delete(synchronize_session=False)
+    post_query.delete(synchronize_session=False)
     db.commit() 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
