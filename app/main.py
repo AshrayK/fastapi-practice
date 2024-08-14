@@ -1,12 +1,6 @@
-from . import models, schemas, utils
-from typing import List
-from .models import Posts, Users
 from .database import Base, engine, get_db
-from fastapi import FastAPI, Depends, HTTPException, Response, status
+from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from psycopg.rows import dict_row
-import time
-import psycopg
 from .routers import post, user, auth
 
 ### This is causing error as models is getting overwritten for some reason

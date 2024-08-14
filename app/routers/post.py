@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import Depends, HTTPException, Response, status, APIRouter
 from sqlalchemy.orm import Session
 from .. import models, schemas, oauth2
@@ -9,8 +9,14 @@ router = APIRouter(
     tags=["Posts"]
 )
 @router.get("/",response_model=List[schemas.PostResponse])
-def root(db: Session = Depends(get_db)):
-    posts = db.query(models.Posts).all()
+def root(db: Session = Depends(get_db),
+         user_current: int = Depends(oauth2.get_current_user),
+         limit : int = 10, skip : int = 0
+         ,search : Optional[str] = ""):
+    posts = db.query(models.Posts).filter(models.Posts.title.contains(search)).limit(limit).offset(skip)
+
+    ## for only the user to get only his posts
+    # posts = db.query(models.Posts).filter(models.Posts.owner_id == user_current.id).all()
     return posts
 
 
@@ -31,6 +37,11 @@ def get_post(id:int, db:Session = Depends(get_db),user_current: int = Depends(oa
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with user id: {id} was not found in the database.")
+    
+    ## if you want only yourself to view only ur posts
+    # if post.owner_id != user_current.id:
+    #     raise HTTPException(status_code = status.HTTP_403_FORBIDDEN,
+    #                         detail = f'User id: {id} is not authorized to perform this action on the post.')
     
     return post
     
