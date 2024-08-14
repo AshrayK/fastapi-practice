@@ -15,16 +15,16 @@ def root(db: Session = Depends(get_db)):
 
 
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=schemas.PostResponse)
-def create_post(post: schemas.PostCreate,db: Session = Depends(get_db),user_id: int = Depends(oauth2.get_current_user)):
+def create_post(post: schemas.PostCreate,db: Session = Depends(get_db),user_current: int = Depends(oauth2.get_current_user)):
     # new_posts=models.Posts(title=post.title, content=post.content, published=post.published)
-    new_posts=models.Posts(**post.dict())
+    new_posts=models.Posts(owner_id = user_current.id,**post.dict())
     db.add(new_posts)
     db.commit()
     db.refresh(new_posts)
     return new_posts
 
 @router.get("/{id}",response_model=schemas.PostResponse)
-def get_post(id:int, db:Session = Depends(get_db),user_id: int = Depends(oauth2.get_current_user)):
+def get_post(id:int, db:Session = Depends(get_db),user_current: int = Depends(oauth2.get_current_user)):
     post = db.query(models.Posts).filter(models.Posts.id == id).first()
 
     if not post:
@@ -34,7 +34,7 @@ def get_post(id:int, db:Session = Depends(get_db),user_id: int = Depends(oauth2.
     return post
     
 @router.put("/{id}",response_model=schemas.PostResponse)
-def update_post(id: int, post: schemas.PostCreate, db:Session = Depends(get_db),user_id: int = Depends(oauth2.get_current_user)):
+def update_post(id: int, post: schemas.PostCreate, db:Session = Depends(get_db),user_current: int = Depends(oauth2.get_current_user)):
     post_query = db.query(models.Posts).filter(models.Posts.id == id)
     existing_post = post_query.first()
     
@@ -50,7 +50,7 @@ def update_post(id: int, post: schemas.PostCreate, db:Session = Depends(get_db),
 
 
 @router.delete("/{id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id:int, db:Session = Depends(get_db),user_id: int = Depends(oauth2.get_current_user)):
+def delete_post(id:int, db:Session = Depends(get_db),user_current: int = Depends(oauth2.get_current_user)):
     del_post = db.query(models.Posts).filter(models.Posts.id == id)
     if del_post.first() is None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,

@@ -11,7 +11,9 @@ class PostCreate(PostBase):
     pass
 
 class PostResponse(PostBase):
+  
     created_at : datetime
+    owner_id : int
 
     class Config:
         orm_mode = True
