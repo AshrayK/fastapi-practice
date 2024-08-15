@@ -11,9 +11,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 from . import schemas
 
-SECRET_KEY = {config.secret_key}
-ALGORITHM = {config.algorithm}
-ACCESS_TOKEN_EXPIRES_IN = {config.access_token_expire_in}
+SECRET_KEY = config.secret_key
+ALGORITHM = config.algorithm
+ACCESS_TOKEN_EXPIRES_IN = config.access_token_expire_in
 
 def create_token(data: dict):
     to_encode= data.copy()
