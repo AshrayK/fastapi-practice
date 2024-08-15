@@ -3,6 +3,8 @@ from pydantic import BaseModel
 import psycopg
 from psycopg.rows import dict_row
 import time
+from ..config import config
+
 
 app = FastAPI()
 
@@ -13,10 +15,10 @@ class Post(BaseModel):
 
 try:
     conn = psycopg.connect(
-        host='localhost',
-        dbname='fastapi',
-        user='postgres',
-        password='admin'
+        host={config.database_hostname},
+        dbname={config.database_name},
+        user={config.database_username},
+        password={config.database_password}
     )
     cursor = conn.cursor(row_factory=dict_row)
 
