@@ -1,4 +1,5 @@
 fastapi-env/
 __pycache__
+/__pycache__
 .env
-app\practice\databaseconnectionpractice
+app/practice/databaseconnectionpractice
