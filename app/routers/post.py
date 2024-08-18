@@ -9,22 +9,23 @@ router = APIRouter(
     tags=["Posts"]
 )
 @router.get("/",response_model=List[schemas.PostResponse])
-def root(db: Session = Depends(get_db),
-         user_current: int = Depends(oauth2.get_current_user),
+def root(db: Session = Depends(get_db), user_current: int = Depends(oauth2.get_current_user),
          limit : int = 10, skip : int = 0
          ,search : Optional[str] = ""):
+    # print(user_current.id)
     posts = db.query(models.Posts).filter(models.Posts.title.contains(search)).limit(limit).offset(skip)
 
     ## for only the user to get only his posts
     # posts = db.query(models.Posts).filter(models.Posts.owner_id == user_current.id).all()
     return posts
 
-
+ 
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=schemas.PostResponse)
 def create_post(post: schemas.PostCreate,db: Session = Depends(get_db),user_current: int = Depends(oauth2.get_current_user)):
     
     # new_posts=models.Posts(title=post.title, content=post.content, published=post.published)
-    new_posts=models.Posts(owner_id = user_current.id,**post.dict())
+    new_posts=models.Posts(**post.dict(),owner_id=user_current.id)
+    print(user_current.id)
     db.add(new_posts)
     db.commit()
     db.refresh(new_posts)

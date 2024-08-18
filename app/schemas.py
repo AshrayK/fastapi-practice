@@ -15,7 +15,8 @@ class UserResponse(BaseModel):
     created_at : datetime
 
     class Config: 
-        orm_mode = True
+        # orm_mode = True
+        from_attributes = True
 
 class UserLogin(BaseModel):
     email : EmailStr
@@ -32,13 +33,13 @@ class TokenDate(BaseModel):
 class UserPostResponse(BaseModel):
     id : int
     email : EmailStr
-    class Config: 
-        orm_mode = True
+
+        
 class PostBase(BaseModel):
     title: str
     content: str
     published : bool = True
-    owner : UserPostResponse
+    # owner : UserPostResponse
 
 class PostCreate(PostBase):
     pass
@@ -47,7 +48,13 @@ class PostResponse(PostBase):
   
     created_at : datetime
     owner_id : int
+    owner: UserPostResponse
 
     class Config:
-        orm_mode = True
+        # orm_mode = True
+        from_attributes = True
 
+
+class Vote(BaseModel):
+    post_id : int
+    dir : bool = False
