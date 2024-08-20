@@ -5,7 +5,7 @@ from .routers import post, user, auth, vote
 
 ### This is causing error as models is getting overwritten for some reason
 # models = Base.metadata.create_all(bind=engine)
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 

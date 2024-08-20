@@ -41,7 +41,6 @@ def root(db: Session = Depends(get_db), user_current: int = Depends(oauth2.get_c
     ## for only the user to get only his posts
     # posts = db.query(models.Posts).filter(models.Posts.owner_id == user_current.id).all()
 
-
     return posts
 
 

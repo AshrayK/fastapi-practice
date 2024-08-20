@@ -16,4 +16,4 @@ class AppConfig(BaseSettings):
         extra='ignore'  
     )
 
-config = AppConfig()
+settings = AppConfig()
