@@ -58,3 +58,18 @@ class PostResponse(PostBase):
 class Vote(BaseModel):
     post_id : int
     dir : bool = False
+
+class PostVote(BaseModel):
+    Post : PostResponse
+    votes : int
+
+    class Config:
+        # orm_mode = True
+        from_attributes = True
+
+class PostOut(BaseModel):
+    Post : PostResponse
+    votes : int
+
+    class Config:
+        from_attributes = True

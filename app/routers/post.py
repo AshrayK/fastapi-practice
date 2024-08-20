@@ -3,11 +3,34 @@ from fastapi import Depends, HTTPException, Response, status, APIRouter
 from sqlalchemy.orm import Session
 from .. import models, schemas, oauth2
 from app.database import get_db
+from sqlalchemy import func
 
 router = APIRouter(
     prefix="/sqlalchemy",
     tags=["Posts"]
 )
+
+# @router.get("/")
+# def root(db: Session = Depends(get_db), user_current: int = Depends(oauth2.get_current_user),
+#          limit: int = 10, skip: int = 0, search: Optional[str] = ""):
+    
+#     # Query posts with optional title search and pagination
+#     query = db.query(models.Posts, func.count(models.Votes.post_id).label("Votes")).join(
+#         models.Votes, models.Votes.post_id == models.Posts.id, isouter=True
+#     ).filter(models.Posts.title.contains(search)).group_by(models.Posts.id).limit(limit).offset(skip)
+    
+#     results = query.all()
+
+#     # Serialize the results
+#     serialized_results = []
+#     for post, vote_count in results:
+#         post_dict = post.__dict__.copy()  # Convert SQLAlchemy object to dictionary
+#         post_dict["Votes"] = vote_count   # Add the vote count to the dictionary
+#         post_dict.pop('_sa_instance_state', None)  # Remove SQLAlchemy internal state
+#         serialized_results.append(post_dict)
+
+#     return serialized_results
+
 @router.get("/",response_model=List[schemas.PostResponse])
 def root(db: Session = Depends(get_db), user_current: int = Depends(oauth2.get_current_user),
          limit : int = 10, skip : int = 0
@@ -17,7 +40,40 @@ def root(db: Session = Depends(get_db), user_current: int = Depends(oauth2.get_c
 
     ## for only the user to get only his posts
     # posts = db.query(models.Posts).filter(models.Posts.owner_id == user_current.id).all()
+
+
     return posts
+
+
+
+# @router.get("/customVotes/",response_model = List[schemas.PostOut])
+# def custom(db: Session = Depends(get_db), user_current : int = Depends(oauth2.get_current_user)):
+#     results = db.query(models.Posts, func.count(models.Votes.post_id)
+#                        .label("Votes")).join(models.Votes, 
+#                                              models.Posts.id == models.Votes.post_id, 
+#                                              isouter =True).group_by(models.Posts.id).all()
+#     return results
+
+@router.get("/customVotes/", response_model=List[schemas.PostOut])
+def custom(db: Session = Depends(get_db), user_current: int = Depends(oauth2.get_current_user)):
+    results = db.query(
+        models.Posts,
+        func.count(models.Votes.post_id).label("votes")
+    ).join(
+        models.Votes,
+        models.Posts.id == models.Votes.post_id,
+        isouter=True
+    ).group_by(
+        models.Posts.id
+    ).all()
+    
+    # Transform the result to match the response model structure
+    response_data = [
+        {"Post": post, "votes": votes}
+        for post, votes in results
+    ]
+    
+    return response_data
 
  
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=schemas.PostResponse)
